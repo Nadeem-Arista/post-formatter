@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:,">
+<title>WordPress post formatter</title>
+<style>
+  :root { --ink:#1d2327; --muted:#646970; --bg:#f0f0f1; --line:#c3c4c7; --blue:#2271b1; --blue-dark:#135e96; --warn:#b32d2e; --ok:#00a32a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:15px; line-height:1.5; }
+  .wrap { max-width:780px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; font-weight:600; }
+  .sub { color:var(--muted); margin:0 0 20px; font-size:14px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:4px; padding:14px 16px; margin-bottom:14px; }
+  .card h2 { font-size:15px; margin:0 0 8px; font-weight:600; }
+  .note { font-size:13px; color:var(--muted); margin:6px 0 0; }
+  input[type=text] { width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:3px; font-size:14px; }
+  .btn { border:1px solid var(--blue); background:var(--blue); color:#fff; padding:8px 18px; font-size:14px; border-radius:3px; cursor:pointer; font-weight:600; }
+  .btn:hover { background:var(--blue-dark); }
+  .btn.ghost { background:#fff; color:var(--blue); }
+  .btn.small { padding:4px 10px; font-size:13px; }
+  .btn:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
+  textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:3px; resize:vertical; }
+  #src { height:180px; font-size:14px; }
+  #code { height:340px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; line-height:1.5; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  #status { font-size:13px; margin-top:8px; }
+  #status div { margin:2px 0; }
+  .bad { color:var(--warn); } .good { color:var(--ok); }
+  .mrow { display:grid; grid-template-columns:110px 1fr auto auto; gap:6px; align-items:center; margin:5px 0; font-size:13px; }
+  .mrow label { color:var(--muted); }
+  .mrow input { width:100%; padding:4px 6px; border:1px solid var(--line); border-radius:3px; font-size:13px; background:#fafafa; }
+  .mrow .cnt { font-size:12px; color:var(--muted); min-width:46px; text-align:right; }
+  .mrow .cnt.bad { color:var(--warn); }
+  label.chk { display:flex; align-items:center; gap:6px; font-size:13px; margin-top:8px; cursor:pointer; }
+  .lrow { display:flex; align-items:center; gap:8px; margin:5px 0; font-size:13px; }
+  .lrow select { padding:3px 4px; border:1px solid var(--line); border-radius:3px; font-size:13px; background:#fff; flex:none; }
+  .lrow span { min-width:0; overflow-wrap:anywhere; }
+  .lk { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; }
+  .lk select { padding:3px 4px; border:1px solid var(--line); border-radius:3px; font-size:13px; background:#fff; flex:none; }
+  .lk div { min-width:0; overflow-wrap:anywhere; }
+  .lk small { display:block; color:var(--muted); font-size:12px; }
+  .dom { display:flex; align-items:center; gap:6px; margin:4px 0; font-size:13px; cursor:pointer; }
+  .hide { display:none !important; }
+  details { font-size:14px; } summary { cursor:pointer; font-weight:600; }
+  details ol { margin:8px 0 0; padding-left:20px; }
+  .foot { text-align:center; color:var(--muted); font-size:12px; margin-top:20px; }
+  @media (max-width:520px) { .mrow { grid-template-columns:1fr auto auto; } .mrow label { grid-column:1 / -1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>WordPress post formatter</h1>
+  <p class="sub">Paste the SEO document, copy the code, paste it into the WordPress Code editor.</p>
+
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">1. Paste the document content</h2>
+      <button class="btn ghost small" id="clear">Clear</button>
+    </div>
+    <textarea id="src" spellcheck="false" placeholder="Paste the full document here (select all, copy, paste)."></textarea>
+    <p class="note">Best result: copy from the original Google Doc or Word file. Headings, lists, tables, bold and links are then taken exactly as in the document.</p>
+    <div class="row" style="margin:10px 0 0">
+      <span class="note" style="margin:0">Got a PDF or Word file? Upload it instead. The file keeps its links and heading levels, but copied text does not.</span>
+      <button class="btn ghost small" id="pickFile">Choose PDF or Word file</button>
+      <input type="file" id="file" accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hide">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">2. Copy the code</h2>
+      <button class="btn" id="copy">Copy code</button>
+    </div>
+    <textarea id="code" spellcheck="false" placeholder="The converted code appears here. You can edit it if needed."></textarea>
+    <label class="chk"><input type="checkbox" id="o-h1"> Remove the H1 from the code (use it only as the WordPress post title)</label>
+    <label class="chk"><input type="checkbox" id="o-wrapp"> Wrap paragraphs in &lt;p&gt; tags (unticked = plain text paragraphs, no &lt;p&gt; tags)</label>
+    <div id="status" aria-live="polite"></div>
+  </div>
+
+  <details class="card hide" id="levelsCard">
+    <summary id="levelsSum">Heading levels</summary>
+    <p class="note">Change a level here and the code updates. Match each heading to the document.</p>
+    <div id="levels"></div>
+  </details>
+
+  <details class="card hide" id="linksCard">
+    <summary id="linksSum">Links</summary>
+    <p class="note">Tick your own websites once. Their links open in the same tab, all other links open in a new tab. The tool remembers your websites. You can also change any single link.</p>
+    <div id="domains"></div>
+    <div id="links"></div>
+  </details>
+
+  <div class="card hide" id="metaCard">
+    <h2>SEO fields</h2>
+    <div id="meta"></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>How to add this to WordPress</summary>
+      <ol>
+        <li>Click <strong>Copy code</strong>.</li>
+        <li>Open the post. Click the three dots at the top right and choose <strong>Code editor</strong>. (Classic editor: use the <strong>Text</strong> tab.)</li>
+        <li>Paste the code. WordPress makes a paragraph from each block of text separated by a blank line.</li>
+        <li>Add the title, slug and SEO fields from the SEO fields box, then publish.</li>
+      </ol>
+    </details>
+  </div>
+  <p class="foot">WordPress post formatter v1.0. Everything runs in your browser. Nothing is uploaded.</p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const escAttr = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+const BLOCKS = 'h1,h2,h3,h4,h5,h6,p,ul,ol,table,blockquote,div';
+const ZW = /[\u200B-\u200D\uFEFF\u2060\u00AD]/g; // invisible characters that PDFs and docs hide in text
+
+let myDomains = new Set();
+try { myDomains = new Set(JSON.parse(localStorage.getItem('wpf-mine') || '[]')); } catch (e) {}
+const saveDomains = () => { try { localStorage.setItem('wpf-mine', JSON.stringify([...myDomains])); } catch (e) {} };
+let srcHtml = null;     // rich HTML from the clipboard (exact headings), if the clipboard had any
+let lastPasted = '';    // plain text that came with that paste
+
+/* =========================================================
+   SEO fields (Slug, Meta Title, Meta Description, Image Alt)
+   ========================================================= */
+const META_RE = /^\s*(slug url|slug|meta title|meta description|image alt text|alt text)\s*:\s*(.+?)\s*$/i;
+function metaKey(label) {
+  label = label.toLowerCase();
+  if (label.startsWith('slug')) return 'slug';
+  if (label === 'meta title') return 'mt';
+  if (label === 'meta description') return 'md';
+  return 'alt';
+}
+function pullMetaDom(doc) {
+  const meta = {};
+  Array.from(doc.body.querySelectorAll('p,div')).filter(el => !el.querySelector(BLOCKS)).forEach(el => {
+    const parts = el.innerHTML.split(/<br\s*\/?>/i);
+    const keep = [];
+    let hit = false;
+    parts.forEach(part => {
+      const tmp = doc.createElement('div');
+      tmp.innerHTML = part;
+      const m = tmp.textContent.match(META_RE);
+      if (m) { meta[metaKey(m[1])] = m[2]; hit = true; } else keep.push(part);
+    });
+    if (hit) {
+      const inner = keep.join('<br>').trim();
+      if (inner) el.innerHTML = inner; else el.remove();
+    }
+  });
+  return meta;
+}
+
+/* =========================================================
+   Links: website links without a domain open in the same tab, links to other websites in a new tab
+   ========================================================= */
+const bareHost = h => h.replace(/^www\./i, '').toLowerCase();
+function hostOf(href) {
+  try {
+    const u = new URL(href.replace(/&amp;/g, '&').replace(/^\/\//, 'https://'));
+    return /^https?:$/.test(u.protocol) ? bareHost(u.hostname) : '';
+  } catch (e) { return ''; }
+}
+// 'same' = same tab, 'new' = new tab, 'none' = mail/phone links
+function linkKind(href, o) {
+  if (/^(mailto:|tel:|sms:)/i.test(href)) return 'none';
+  if (href.startsWith('#')) return 'same';
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(href) && !href.startsWith('//')) return 'same';
+  const h = hostOf(href);
+  if (!h) return 'none';
+  return o.mine && o.mine.has(h) ? 'same' : 'new';
+}
+function fixHref(href) { // Google Docs wraps links in a google.com/url?q=... redirect
+  try {
+    const u = new URL(href);
+    if (/(^|\.)google\.com$/.test(u.hostname) && u.pathname === '/url' && u.searchParams.get('q')) return u.searchParams.get('q');
+  } catch (e) {}
+  return href;
+}
+
+/* =========================================================
+   Rich HTML (Google Docs / Word) -> clean WordPress code
+   Paragraphs are plain text separated by a blank line (no <p> tags)
+   ========================================================= */
+function walk(n, o) {
+  if (n.nodeType === 3) return esc(n.nodeValue.replace(ZW, '').replace(/\s+/g, ' '));
+  if (n.nodeType !== 1) return '';
+  const t = n.tagName.toLowerCase();
+  if (['script', 'style', 'meta', 'head', 'title', 'link'].includes(t)) return '';
+  const kids = () => Array.from(n.childNodes).map(c => walk(c, o)).join('');
+  const oneLine = s => s.replace(/<\/?p>/g, '').replace(/\s*\n+\s*/g, ' ').trim();
+
+  if (/^h[1-6]$/.test(t)) {
+    if (t === 'h1' && o.dropH1) return '';
+    const inner = kids().replace(/<\/?(strong|em)>/g, '').replace(/\s*\n+\s*/g, ' ').trim();
+    return inner ? `<${t}>${inner}</${t}>\n\n` : '';
+  }
+  if (t === 'p') { const i = kids().trim(); return i ? (o.wrapP ? `<p>${i}</p>` : i) + '\n\n' : ''; }
+  if (t === 'ul' || t === 'ol') { const i = kids(); return i.trim() ? `<${t}>\n${i}</${t}>\n\n` : ''; }
+  if (t === 'li') { const i = oneLine(kids()); return i ? `<li>${i}</li>\n` : ''; }
+  if (t === 'blockquote') { const i = kids().replace(/\n{2,}/g, '\n').trim(); return i ? `<blockquote>\n${i}\n</blockquote>\n\n` : ''; }
+  if (t === 'table') { const i = kids(); return i.trim() ? `<table>\n${i}</table>\n\n` : ''; }
+  if (['thead', 'tbody', 'tr'].includes(t)) { const i = kids(); return i.trim() ? `<${t}>\n${i}</${t}>\n` : ''; }
+  if (t === 'th' || t === 'td') return `<${t}>${oneLine(kids())}</${t}>\n`;
+  if (t === 'br') return '<br>';
+  if (t === 'img') {
+    const src = n.getAttribute('src');
+    return src && !src.startsWith('data:') ? `<img src="${escAttr(src)}" alt="${escAttr(n.getAttribute('alt') || '')}">` : '';
+  }
+  if (t === 'a') {
+    const href = n.getAttribute('href');
+    const raw = kids();
+    const inner = raw.trim();
+    if (!href || !inner) return raw;
+    const h = fixHref(href);
+    const attr = linkKind(h, o) === 'new' ? ' target="_blank" rel="noopener"' : '';
+    return `${/^\s/.test(raw) ? ' ' : ''}<a href="${escAttr(h)}"${attr}>${inner}</a>${/\s$/.test(raw) ? ' ' : ''}`;
+  }
+  if (t === 'div') {
+    if (n.querySelector(BLOCKS)) return kids();
+    const i = kids().trim();
+    return i ? (o.wrapP ? `<p>${i}</p>` : i) + '\n\n' : '';
+  }
+  // inline wrappers: span, b, i, strong, em ...
+  let inner = kids();
+  if (!inner.trim()) return inner;
+  const fw = n.style && n.style.fontWeight;
+  const fs = n.style && n.style.fontStyle;
+  const bold = (t === 'b' || t === 'strong') ? !(fw === 'normal' || fw === '400') : (fw === 'bold' || parseInt(fw) >= 600);
+  const ital = (t === 'i' || t === 'em') ? fs !== 'normal' : fs === 'italic';
+  if (bold) inner = `<strong>${inner}</strong>`;
+  if (ital) inner = `<em>${inner}</em>`;
+  return inner;
+}
+
+/* Pasted HTML without <h1>-<h6> tags but with font sizes: larger text = heading, biggest size = H1, next = H2 ... */
+function applySizeHeadings(doc) {
+  const sizeOf = el => {
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const fs = n.style && n.style.fontSize;
+      const m = fs && fs.match(/^([\d.]+)(pt|px)$/);
+      if (m) return m[2] === 'pt' ? +m[1] : +m[1] * 0.75;
+      if (n === doc.body) break;
+    }
+    return null;
+  };
+  const textNodes = el => {
+    const out = [], tw = doc.createTreeWalker(el, 4);
+    let x;
+    while ((x = tw.nextNode())) if (x.nodeValue.trim()) out.push(x);
+    return out;
+  };
+  const leaves = Array.from(doc.body.querySelectorAll('p,div')).filter(el => !el.querySelector(BLOCKS) && !el.closest('li,td,th,blockquote'));
+  const weight = {};
+  textNodes(doc.body).forEach(tn => {
+    const s = sizeOf(tn.parentElement);
+    if (s) { const k = Math.round(s * 2) / 2; weight[k] = (weight[k] || 0) + tn.nodeValue.trim().length; }
+  });
+  const keys = Object.keys(weight);
+  if (!keys.length) return 0;
+  const body = +keys.sort((a, b) => weight[b] - weight[a])[0];
+
+  const cands = [];
+  leaves.forEach(el => {
+    const tns = textNodes(el);
+    if (!tns.length) return;
+    const sizes = tns.map(tn => sizeOf(tn.parentElement) || body);
+    const max = Math.max(...sizes);
+    if (sizes.some(s => max - s > 0.4)) return; // mixed sizes: normal text with a bigger word
+    const len = el.textContent.trim().length;
+    if (max > body + 0.9 && len <= 160) cands.push({ el, size: max });
+  });
+  if (!cands.length) return 0;
+  const sizes = [...new Set(cands.map(c => Math.round(c.size * 10) / 10))].sort((a, b) => b - a);
+  const clusters = [];
+  sizes.forEach(v => { const last = clusters[clusters.length - 1]; if (last && last.min - v <= 0.8) last.min = v; else clusters.push({ max: v, min: v }); });
+  cands.forEach(c => {
+    const i = clusters.findIndex(k => c.size <= k.max + 0.05 && c.size >= k.min - 0.05);
+    const h = doc.createElement('h' + Math.min(i + 1, 6));
+    while (c.el.firstChild) h.appendChild(c.el.firstChild);
+    c.el.replaceWith(h);
+  });
+  return cands.length;
+}
+
+function cleanRich(html, o) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const meta = pullMetaDom(doc);
+  if (o.sizeHeads && !doc.body.querySelector('h1,h2,h3,h4,h5,h6')) { try { applySizeHeadings(doc); } catch (e) {} }
+  let out = Array.from(doc.body.childNodes).map(c => walk(c, o)).join('');
+  let before;
+  do { // link split in pieces (common in PDFs and Word): join pieces that point to the same address
+    before = out;
+    out = out.replace(/(<a href="([^"]*)"[^>]*>)((?:(?!<\/a>)[\s\S])*?)<\/a>(\s*)<a href="\2"[^>]*>/g, '$1$3$4');
+  } while (out !== before);
+  out = out
+    .replace(/<\/strong>(\s*)<strong>/g, '$1').replace(/<\/em>(\s*)<em>/g, '$1')
+    .replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n').trim();
+  return { html: out, meta };
+}
+
+/* =========================================================
+   Plain text (no formatting in the clipboard): best-effort structure
+   ========================================================= */
+// Web addresses typed in plain text become links
+const linkify = t => t.replace(/\b((?:https?:\/\/|www\.)[^\s<]*[^\s<.,;:!?)"'\]])/gi, (m, u) => `<a href="${/^www\./i.test(u) ? 'https://' + u : u}">${u}</a>`);
+const inl = s => linkify(esc(s));
+const BUL_ONLY = /^[\u2022\u25CF\u25AA\u25E6\u2023\uF0B7\uF0A7\uF0D8\uF076\-\u2013\u2014*]$/;
+
+function textToHtml(text) {
+  const raw = text.replace(ZW, '').replace(/\u00a0/g, ' ').split(/\r?\n/).map(l => l.trim());
+  const L = [];
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] && BUL_ONLY.test(raw[i])) { // lone bullet sign: join with the next text line
+      let j = i + 1;
+      while (j < raw.length && !raw[j]) j++;
+      if (j < raw.length) { L.push('\u25CF ' + raw[j]); i = j; continue; }
+    }
+    L.push(raw[i]);
+  }
+  const content = L.filter(Boolean);
+  if (!content.length) return '';
+  const lens = content.map(l => l.length).sort((a, b) => a - b);
+  const W = lens[Math.floor(lens.length * 0.85)] || 0; // typical full line width
+  const END = /[.!?:;\u201D"')\]]$/;
+  // If most lines sit alone between blank lines, the blanks come from line wrapping, not from paragraphs
+  const blocks = L.join('\n').split(/\n\s*\n/).map(b => b.split('\n').filter(Boolean)).filter(b => b.length);
+  const broken = blocks.filter(b => b.length === 1 && b[0].length > W * 0.7 && !END.test(b[0])).length;
+  const blanksOk = broken < 2;
+  const nxt = i => { let j = i + 1; if (!blanksOk) while (j < L.length && !L[j]) j++; return j < L.length && L[j] ? j : -1; };
+
+  const out = [];
+  let para = [], list = null, prevEnded = true, first = true, faq = false;
+  const flushP = () => { if (para.length) { out.push({ t: 'p', s: '<p>' + inl(para.join(' ')) + '</p>' }); para = []; } };
+  const flushL = () => { if (list) { out.push({ t: 'x', s: `<${list.t}>` + list.items.map(i => '<li>' + inl(i) + '</li>').join('') + `</${list.t}>` }); list = null; } };
+
+  for (let i = 0; i < L.length; i++) {
+    let line = L[i];
+    if (!line) { if (blanksOk) { flushP(); flushL(); prevEnded = true; } continue; }
+
+    if (META_RE.test(line)) { // SEO lines. Only the meta description can wrap onto a second line.
+      flushP(); flushL();
+      const j = nxt(i);
+      if (/^meta description/i.test(line) && j > 0 && W && line.length >= W * 0.8 && !/[.!?]$/.test(line) && !META_RE.test(L[j])) { line += ' ' + L[j]; i = j; }
+      out.push({ t: 'p', s: '<p>' + esc(line) + '</p>' });
+      continue;
+    }
+
+    const ul = line.match(/^(?:[\u2022\u25CF\u25AA\u25E6\u2023\uF0B7]\s*|[-\u2013\u2014*]\s+)(.+)$/);
+    const ol = line.match(/^\d{1,2}[.)]\s+(.+)$/);
+    if (ul || ol) {
+      flushP();
+      const t = ul ? 'ul' : 'ol';
+      if (list && list.t !== t) flushL();
+      if (!list) list = { t, items: [] };
+      list.items.push((ul || ol)[1]);
+      prevEnded = true; first = false;
+      continue;
+    }
+    flushL();
+
+    if (first) {
+      first = false;
+      if (line.length <= 120 && !/[.,;:!]$/.test(line)) { // first line = title (H1)
+        let j;
+        while ((j = nxt(i)) > 0 && L[j].split(/\s+/).length <= 3 && !/[.!?]$/.test(L[j]) && !META_RE.test(L[j])) { line += ' ' + L[j]; i = j; }
+        flushP();
+        out.push({ t: 'h', lvl: 1, s: '<h1>' + esc(line) + '</h1>' });
+        prevEnded = true;
+        continue;
+      }
+    }
+
+    const words = line.split(/\s+/).length;
+    const endsOk = /\?$/.test(line) || !/[.,;:!]$/.test(line);
+    const short = W ? line.length <= Math.min(100, W * 0.9) : line.length <= 90;
+    const j2 = nxt(i);
+    const continues = j2 > 0 && /^[a-z]/.test(L[j2]); // next line starts in lowercase: this line is mid-sentence
+    if (prevEnded && endsOk && short && words <= 16 && !continues && /^[A-Z0-9\u201C"\u2018']/.test(line)) {
+      flushP();
+      const lvl = faq ? 4 : 2; // FAQ questions are smaller than H3 in the SEO template
+      out.push({ t: 'h', lvl, s: `<h${lvl}>${esc(line)}</h${lvl}>`, text: line });
+      if (/^frequently asked questions/i.test(line)) faq = true;
+      prevEnded = true;
+      continue;
+    }
+
+    para.push(line);
+    prevEnded = END.test(line);
+    if (prevEnded && W && line.length < W * 0.85) flushP();
+  }
+  flushP(); flushL();
+
+  // A run of 4+ short "headings" in a row is really a 2-column table (real headings are never 4+ in a row)
+  const res = [];
+  for (let i = 0; i < out.length; i++) {
+    if (out[i].t === 'h' && out[i].lvl > 1) {
+      let j = i;
+      while (j < out.length && out[j].t === 'h' && out[j].lvl > 1) j++;
+      const run = out.slice(i, j);
+      if (run.length >= 4 && run.length % 2 === 0) {
+        let tbl = '<table>';
+        for (let r = 0; r < run.length; r += 2) {
+          const tag = r === 0 ? 'th' : 'td';
+          tbl += `<tr><${tag}>${inl(run[r].text)}</${tag}><${tag}>${inl(run[r + 1].text)}</${tag}></tr>`;
+        }
+        res.push({ t: 'x', s: tbl + '</table>' });
+        i = j - 1;
+        continue;
+      }
+    }
+    res.push(out[i]);
+  }
+  return res.map(b => b.s).join('\n');
+}
+
+
+/* =========================================================
+   Optional PDF upload: headings from font sizes, lists, tables, bold and links
+   (pdf.js is downloaded only when a PDF is chosen)
+   ========================================================= */
+const BUL_START = /^(?:[•●▪◦‣\u2022\u25CF\uF0B7\uF0A7\uF076]|[-–—*](?=\s))\s*(.*)$/;
+const NUM_START = /^(\d{1,2})[.)]\s+(.+)$/;
+const META_START = /^\s*(slug url|slug|meta title|meta description|image alt text|alt text)\s*:/i;
+const LIGS = { '\uFB00': 'ff', '\uFB01': 'fi', '\uFB02': 'fl', '\uFB03': 'ffi', '\uFB04': 'ffl' };
+
+function runsToHtml(runs, stripBold) {
+  const merged = [];
+  runs.forEach(r => {
+    const last = merged[merged.length - 1];
+    if (last && last.bold === r.bold && last.italic === r.italic && last.href === r.href) last.text += r.text;
+    else merged.push({ ...r });
+  });
+  return merged.map(r => {
+    let s = esc(r.text);
+    if (r.italic && s.trim()) s = `<em>${s}</em>`;
+    if (r.bold && !stripBold && s.trim()) s = `<strong>${s}</strong>`;
+    if (r.href && s.trim()) s = `<a href="${escAttr(r.href)}">${s}</a>`;
+    return s;
+  }).join('');
+}
+
+function lineFromItems(items) {
+  let bullet = false;
+  items = items.filter(i => i.str !== '');
+  if (items.length && BUL_ONLY.test(items[0].str.trim())) { bullet = true; items = items.slice(1); }
+  const cells = [];
+  let cell = null, prev = null, lineBold = true, xEnd = 0;
+  const sizeW = {};
+  for (const it of items) {
+    const t = it.str.replace(/[\uFB00-\uFB04]/g, c => LIGS[c]);
+    if (!t.trim() && it.w > Math.max(it.size * 1.8, 12)) { cell = null; prev = it; continue; } // wide blank = gap between table cells
+    if (!t.trim() && !prev) continue;
+    const gap = prev ? it.x - (prev.x + prev.w) : 0;
+    if (prev && gap > Math.max(it.size * 1.8, 12)) cell = null;
+    if (!cell) { cell = { x: it.x, runs: [] }; cells.push(cell); }
+    else if (gap > it.size * 0.12 && !/\s$/.test(prev.str) && !/^\s/.test(t)) {
+      cell.runs.push({ text: ' ', bold: prev.bold, italic: prev.italic, href: prev.href && prev.href === it.href ? prev.href : undefined });
+    }
+    cell.runs.push({ text: t, bold: !!it.bold, italic: !!it.italic, href: it.href });
+    if (t.trim()) {
+      if (!it.bold) lineBold = false;
+      const k = Math.round(it.size * 2) / 2;
+      sizeW[k] = (sizeW[k] || 0) + t.trim().length;
+    }
+    prev = it;
+    xEnd = it.x + it.w;
+  }
+  if (!cells.length) return null;
+  cells.forEach(c => {
+    c.html = runsToHtml(c.runs, lineBold).trim();
+    c.plain = c.runs.map(r => r.text).join('').trim();
+  });
+  let live = cells.filter(c => c.plain);
+  if (!live.length) return null;
+  let html = live.map(c => c.html).join(' ');
+  let plain = live.map(c => c.plain).join(' ').trim();
+  let outCells = live;
+  if (!bullet) {
+    const m = plain.match(BUL_START);
+    if (m && m[1]) {
+      bullet = true;
+      html = html.replace(/^(?:<[^>]+>)*(?:[•●▪◦‣\u2022\u25CF\uF0B7\uF0A7\uF076]|[-–—*])\s*/, '');
+      plain = m[1];
+    }
+  }
+  if (bullet) outCells = [{ x: live[0].x, html, plain }];
+  const size = +Object.keys(sizeW).sort((a, b) => sizeW[b] - sizeW[a])[0] || items[0].size;
+  return { bullet, size, bold: lineBold, x: live[0].x, xEnd, width: xEnd - live[0].x, cells: outCells, html, plain };
+}
+
+function buildLines(pages) {
+  const lines = [];
+  pages.forEach((pg, pi) => {
+    const items = pg.items.filter(i => i.str !== '').slice().sort((a, b) => b.y - a.y || a.x - b.x);
+    const groups = [];
+    let cur = null;
+    for (const it of items) {
+      const tol = Math.max(1.5, it.size * 0.35);
+      if (cur && Math.abs(cur.y - it.y) <= tol) cur.items.push(it);
+      else { cur = { y: it.y, items: [it] }; groups.push(cur); }
+    }
+    groups.forEach(g => {
+      g.items.sort((a, b) => a.x - b.x);
+      const L = lineFromItems(g.items);
+      if (L) { L.page = pi; L.y = g.y; lines.push(L); }
+    });
+  });
+  return lines;
+}
+
+function clusterSizes(sizes, tol) {
+  const s = [...new Set(sizes.map(x => Math.round(x * 10) / 10))].sort((a, b) => a - b);
+  const cl = [];
+  for (const v of s) {
+    const last = cl[cl.length - 1];
+    if (last && v - last.max <= tol) last.max = v; else cl.push({ min: v, max: v });
+  }
+  return cl;
+}
+
+function buildFromPdf(pages) {
+  let lines = buildLines(pages).filter(l => !/^(page\s*)?\d{1,3}(\s*(of|\/)\s*\d{1,3})?$/i.test(l.plain));
+  if (!lines.length) return '';
+
+  // Body text size = the most common size
+  const w = {};
+  lines.forEach(l => { const k = Math.round(l.size * 2) / 2; w[k] = (w[k] || 0) + l.plain.length; });
+  const body = +Object.keys(w).sort((a, b) => w[b] - w[a])[0];
+
+  // Larger sizes become H1, H2, H3... (largest first)
+  const bigCandidates = lines.filter(l => l.size > body + 0.9 && l.plain.length <= 160 && !l.bullet && l.cells.length === 1);
+  const clusters = clusterSizes(bigCandidates.map(l => l.size), 0.8).reverse(); // largest first
+  const boldLevel = Math.min(clusters.length + 1, 6);
+
+  const headingLevel = l => {
+    if (l.bullet || l.cells.length !== 1 || META_START.test(l.plain)) return 0;
+    if (l.size > body + 0.9) {
+      const i = clusters.findIndex(c => l.size >= c.min - 0.05 && l.size <= c.max + 0.05);
+      return i >= 0 ? Math.min(i + 1, 6) : 0;
+    }
+    const words = l.plain.split(/\s+/).length;
+    if (l.bold && l.plain.length <= 110 && words <= 18 && !/[.,;:]$/.test(l.plain)) return boldLevel;
+    return 0;
+  };
+
+  // Typical line gap and line width of body text
+  const gaps = [];
+  for (let i = 1; i < lines.length; i++) {
+    const a = lines[i - 1], b = lines[i];
+    if (a.page === b.page && !headingLevel(a) && !headingLevel(b) && Math.abs(a.size - body) <= 0.8 && Math.abs(b.size - body) <= 0.8) gaps.push(a.y - b.y);
+  }
+  gaps.sort((a, b) => a - b);
+  const medianGap = gaps.length ? gaps[Math.floor(gaps.length / 2)] : body * 1.4;
+  const widths = lines.filter(l => !l.bullet && l.cells.length === 1 && Math.abs(l.size - body) <= 0.8).map(l => l.width).sort((a, b) => a - b);
+  const maxWidth = widths.length ? widths[Math.floor(widths.length * 0.9)] : 0;
+
+  const blocks = [];
+  let open = null, prev = null;
+  const push = b => { blocks.push(b); open = b; return b; };
+
+  for (const l of lines) {
+    const gap = prev && prev.page === l.page ? prev.y - l.y : null;
+    const smallGap = gap !== null && gap <= medianGap * 1.3;
+    const lvl = headingLevel(l);
+
+    if (lvl) {
+      if (open && open.type === 'h' && open.lvl === lvl && gap !== null && gap <= l.size * 1.8) open.text += ' ' + l.plain;
+      else push({ type: 'h', lvl, text: l.plain });
+      prev = l; continue;
+    }
+
+    if (l.cells.length >= 2 && !l.bullet) {
+      if (open && open.type === 'table') open.rows.push(l.cells.map(c => ({ x: c.x, html: c.html })));
+      else push({ type: 'table', rows: [l.cells.map(c => ({ x: c.x, html: c.html }))] });
+      prev = l; continue;
+    }
+
+    if (open && open.type === 'table' && l.cells.length === 1 && smallGap && !l.bullet) {
+      const row = open.rows[open.rows.length - 1];
+      let best = 0;
+      row.forEach((c, i) => { if (Math.abs(c.x - l.x) < Math.abs(row[best].x - l.x)) best = i; });
+      if (Math.abs(row[best].x - l.x) <= 6) { row[best].html += ' ' + l.html; prev = l; continue; }
+    }
+
+    const numbered = !l.bullet && Math.abs(l.size - body) <= 0.8 && NUM_START.test(l.plain);
+    if (l.bullet || numbered) {
+      const type = l.bullet ? 'ul' : 'ol';
+      const item = numbered ? l.html.replace(/^(?:<[^>]+>)*\d{1,2}[.)]\s+/, '') : l.html;
+      if (open && open.type === type) open.items.push(item); else push({ type, items: [item] });
+      prev = l; continue;
+    }
+
+    if (open && (open.type === 'ul' || open.type === 'ol') && smallGap) {
+      open.items[open.items.length - 1] += ' ' + l.html;
+      prev = l; continue;
+    }
+
+    const forceBreak = META_START.test(l.plain);
+    const prevShort = prev && prev.cells.length === 1 && /[.!?:”"')]$/.test(prev.plain) && maxWidth && prev.width < maxWidth * 0.8;
+    const bigGap = gap !== null && gap > medianGap * 1.3;
+    if (open && open.type === 'p' && !forceBreak && !bigGap && !prevShort) open.html += ' ' + l.html;
+    else push({ type: 'p', html: l.html });
+    prev = l;
+  }
+
+  const outHtml = blocks.map(b => {
+    if (b.type === 'h') return `<h${b.lvl}>${esc(b.text)}</h${b.lvl}>`;
+    if (b.type === 'p') return `<p>${b.html.trim()}</p>`;
+    if (b.type === 'ul' || b.type === 'ol') return `<${b.type}>${b.items.map(i => `<li>${i.trim()}</li>`).join('')}</${b.type}>`;
+    if (b.type === 'table') {
+      if (b.rows.length < 2) return `<p>${b.rows[0].map(c => c.html).join(' ')}</p>`;
+      return '<table>' + b.rows.map((r, ri) => `<tr>${r.map(c => ri === 0 ? `<th>${c.html}</th>` : `<td>${c.html}</td>`).join('')}</tr>`).join('') + '</table>';
+    }
+    return '';
+  });
+  return outHtml.join('\n');
+}
+
+async function loadPdfjs() {
+  if (window.__pdfjs) return window.__pdfjs;
+  const V = '5.6.205';
+  for (const base of [`https://cdn.jsdelivr.net/npm/pdfjs-dist@${V}/build/`, `https://unpkg.com/pdfjs-dist@${V}/build/`]) {
+    try {
+      const lib = await import(base + 'pdf.min.mjs');
+      const code = await (await fetch(base + 'pdf.worker.min.mjs')).text();
+      lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+      return (window.__pdfjs = lib);
+    } catch (e) {}
+  }
+  throw new Error('Could not load the PDF reader. Check your internet connection and try again.');
+}
+
+async function readPdf(file) {
+  const lib = await loadPdfjs();
+  const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pages = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    try { await page.getOperatorList(); } catch (e) {}
+    let links = [];
+    try { links = (await page.getAnnotations()).filter(a => a.subtype === 'Link' && a.url).map(a => ({ r: a.rect, url: a.url })); } catch (e) {}
+    const fonts = {};
+    const fontInfo = name => {
+      if (fonts[name]) return fonts[name];
+      let real = '';
+      try { const f = page.commonObjs.get(name); real = (f && f.name) || ''; } catch (e) {}
+      if (!real && tc.styles && tc.styles[name]) real = tc.styles[name].fontFamily || '';
+      return (fonts[name] = { bold: /bold|black|heavy|semibold|demi/i.test(real), italic: /italic|oblique/i.test(real) });
+    };
+    const items = [];
+    for (const it of tc.items) {
+      if (!('str' in it)) continue;
+      const tr = it.transform;
+      const size = Math.hypot(tr[0], tr[1]) || it.height || 10;
+      const x = tr[4], y = tr[5], w = it.width || 0;
+      const fi = fontInfo(it.fontName);
+      const cx = x + w / 2, cy = y + size * 0.3;
+      const link = links.find(l => cx >= l.r[0] && cx <= l.r[2] && cy >= l.r[1] - 2 && cy <= l.r[3] + 2);
+      items.push({ str: it.str, x, y, w, size, bold: fi.bold, italic: fi.italic, href: link ? link.url : undefined });
+    }
+    pages.push({ items });
+  }
+  return buildFromPdf(pages);
+}
+
+/* =========================================================
+   Word (.docx) reader: heading styles, lists, tables, bold, italic and links
+   Built in (no download): a .docx is a zip file with XML inside
+   ========================================================= */
+const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+async function inflateRaw(u8) {
+  if (typeof DecompressionStream === 'undefined') throw new Error('This browser is too old to read Word files. Update the browser, or copy and paste the text instead.');
+  const stream = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function readZip(buf, wanted) {
+  const u8 = new Uint8Array(buf), dv = new DataView(buf);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('This is not a valid .docx file.');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const dec = new TextDecoder();
+  const files = {};
+  for (let n = 0; n < count; n++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const nameLen = dv.getUint16(p + 28, true), extraLen = dv.getUint16(p + 30, true), commLen = dv.getUint16(p + 32, true);
+    files[dec.decode(u8.subarray(p + 46, p + 46 + nameLen))] = { method: dv.getUint16(p + 10, true), csize: dv.getUint32(p + 20, true), lho: dv.getUint32(p + 42, true) };
+    p += 46 + nameLen + extraLen + commLen;
+  }
+  const out = {};
+  for (const name of wanted) {
+    const f = files[name];
+    if (!f) continue;
+    const start = f.lho + 30 + dv.getUint16(f.lho + 26, true) + dv.getUint16(f.lho + 28, true);
+    const data = u8.subarray(start, start + f.csize);
+    out[name] = dec.decode(f.method === 0 ? data : await inflateRaw(data));
+  }
+  return out;
+}
+
+const parseXml = str => new DOMParser().parseFromString(str, 'application/xml');
+const wKids = (el, name) => (el ? Array.from(el.children).filter(c => c.localName === name) : []);
+const wFirst = (el, name) => wKids(el, name)[0] || null;
+const wAttr = (el, name) => (el ? (el.getAttributeNS(W_NS, name) || el.getAttribute('w:' + name)) : null);
+const wOn = el => { if (!el) return false; const v = wAttr(el, 'val'); return !(v === '0' || v === 'false' || v === 'off' || v === 'none'); };
+
+function parseStyles(xmlStr) {
+  const map = {};
+  let defSz = null;
+  if (!xmlStr) return { map, defSz };
+  const doc = parseXml(xmlStr);
+  const dd = wFirst(wFirst(wFirst(doc.documentElement, 'docDefaults'), 'rPrDefault'), 'rPr');
+  if (dd && wFirst(dd, 'sz')) defSz = +wAttr(wFirst(dd, 'sz'), 'val') / 2;
+  wKids(doc.documentElement, 'style').forEach(st => {
+    const pPr = wFirst(st, 'pPr'), rPr = wFirst(st, 'rPr');
+    const ol = pPr && wFirst(pPr, 'outlineLvl');
+    const np = pPr && wFirst(pPr, 'numPr');
+    map[wAttr(st, 'styleId')] = {
+      name: (wAttr(wFirst(st, 'name'), 'val') || '').toLowerCase(),
+      based: wAttr(wFirst(st, 'basedOn'), 'val'),
+      outline: ol ? +wAttr(ol, 'val') : null,
+      sz: rPr && wFirst(rPr, 'sz') ? +wAttr(wFirst(rPr, 'sz'), 'val') / 2 : null,
+      numId: np && wFirst(np, 'numId') ? wAttr(wFirst(np, 'numId'), 'val') : null,
+    };
+  });
+  return { map, defSz };
+}
+function styleProp(map, id, fn) { // look up a property along the "based on" chain
+  for (let i = 0; id && map[id] && i < 10; i++, id = map[id].based) { const v = fn(map[id], id); if (v != null) return v; }
+  return null;
+}
+function styleLevel(map, id) {
+  return styleProp(map, id, (st, sid) => {
+    const m = st.name.match(/^heading\s?(\d)$/) || sid.match(/^heading\s?(\d)$/i);
+    if (m) return Math.min(+m[1], 6);
+    if (st.name === 'title') return 1;
+    if (st.outline != null && st.outline < 9) return Math.min(st.outline + 1, 6);
+    return null;
+  });
+}
+
+function parseNumbering(xmlStr) {
+  const abs = {}, nums = {};
+  if (xmlStr) {
+    const doc = parseXml(xmlStr);
+    wKids(doc.documentElement, 'abstractNum').forEach(a => {
+      const lv = {};
+      wKids(a, 'lvl').forEach(l => { lv[wAttr(l, 'ilvl')] = wAttr(wFirst(l, 'numFmt'), 'val'); });
+      abs[wAttr(a, 'abstractNumId')] = lv;
+    });
+    wKids(doc.documentElement, 'num').forEach(n => { nums[wAttr(n, 'numId')] = wAttr(wFirst(n, 'abstractNumId'), 'val'); });
+  }
+  return (numId, ilvl) => {
+    const lv = abs[nums[numId]] || {};
+    const fmt = lv[String(ilvl || 0)] || lv['0'];
+    return !fmt || fmt === 'bullet' || fmt === 'none' ? 'ul' : 'ol';
+  };
+}
+
+function parseRels(xmlStr) {
+  const rels = {};
+  if (!xmlStr) return rels;
+  Array.from(parseXml(xmlStr).documentElement.children).forEach(r => {
+    if (/hyperlink$/i.test(r.getAttribute('Type') || '') && r.getAttribute('TargetMode') === 'External') rels[r.getAttribute('Id')] = r.getAttribute('Target');
+  });
+  return rels;
+}
+
+async function readDocx(file) {
+  const f = await readZip(await file.arrayBuffer(), ['word/document.xml', 'word/styles.xml', 'word/numbering.xml', 'word/_rels/document.xml.rels']);
+  if (!f['word/document.xml']) throw new Error('This is not a valid .docx file.');
+  const { map: styles, defSz } = parseStyles(f['word/styles.xml']);
+  const listType = parseNumbering(f['word/numbering.xml']);
+  const rels = parseRels(f['word/_rels/document.xml.rels']);
+  const body = wFirst(parseXml(f['word/document.xml']).documentElement, 'body');
+  if (!body) throw new Error('No text found in this Word file.');
+
+  const getRuns = (p, styleId) => {
+    const runs = [];
+    let fieldHref = null, instr = '', collecting = false;
+    const styleSz = styleProp(styles, styleId, st => st.sz);
+    const handleRun = (r, href) => {
+      const rPr = wFirst(r, 'rPr');
+      let text = '';
+      Array.from(r.children).forEach(c => {
+        const n = c.localName;
+        if (n === 't') text += c.textContent;
+        else if (n === 'tab' || n === 'br') text += ' ';
+        else if (n === 'noBreakHyphen') text += '-';
+        else if (n === 'instrText' && collecting) instr += c.textContent;
+        else if (n === 'fldChar') {
+          const t = wAttr(c, 'fldCharType');
+          if (t === 'begin') { collecting = true; instr = ''; fieldHref = null; }
+          else if (t === 'separate') { collecting = false; const m = instr.match(/HYPERLINK\s+"([^"]+)"/i); fieldHref = m ? m[1] : null; }
+          else if (t === 'end') { collecting = false; fieldHref = null; }
+        }
+      });
+      text = text.replace(ZW, '').replace(/\u00a0/g, ' ');
+      if (!text) return;
+      const sz = rPr && wFirst(rPr, 'sz') ? +wAttr(wFirst(rPr, 'sz'), 'val') / 2 : (styleSz || defSz);
+      runs.push({ text, bold: rPr ? wOn(wFirst(rPr, 'b')) : false, italic: rPr ? wOn(wFirst(rPr, 'i')) : false, href: href || fieldHref || undefined, sz });
+    };
+    const scan = (el, href) => Array.from(el.children).forEach(c => {
+      const n = c.localName;
+      if (n === 'r') handleRun(c, href);
+      else if (n === 'hyperlink') {
+        const rid = c.getAttributeNS(R_NS, 'id') || c.getAttribute('r:id');
+        scan(c, rid && rels[rid] ? rels[rid] : href);
+      } else if (n === 'fldSimple') {
+        const m = (wAttr(c, 'instr') || '').match(/HYPERLINK\s+"([^"]+)"/i);
+        scan(c, m ? m[1] : href);
+      } else if (['sdt', 'sdtContent', 'smartTag', 'ins'].includes(n)) scan(c, href);
+    });
+    scan(p, null);
+    return runs;
+  };
+
+  const blocks = [];
+  const handleP = p => {
+    const pPr = wFirst(p, 'pPr');
+    const styleId = pPr && wFirst(pPr, 'pStyle') ? wAttr(wFirst(pPr, 'pStyle'), 'val') : null;
+    const runs = getRuns(p, styleId);
+    const text = runs.map(r => r.text).join('').trim();
+    if (!text) return;
+    let level = styleLevel(styles, styleId) || 0;
+    const ol = pPr && wFirst(pPr, 'outlineLvl');
+    if (ol && +wAttr(ol, 'val') < 9) level = Math.min(+wAttr(ol, 'val') + 1, 6);
+    let list = null;
+    if (!level) {
+      const np = pPr && wFirst(pPr, 'numPr');
+      let numId = np && wFirst(np, 'numId') ? wAttr(wFirst(np, 'numId'), 'val') : styleProp(styles, styleId, st => st.numId);
+      const ilvl = np && wFirst(np, 'ilvl') ? wAttr(wFirst(np, 'ilvl'), 'val') : '0';
+      if (numId && numId !== '0') list = listType(numId, ilvl);
+      else if (styleId && /^list\s?bullet/i.test(styles[styleId] ? styles[styleId].name : styleId)) list = 'ul';
+      else if (styleId && /^list\s?number/i.test(styles[styleId] ? styles[styleId].name : styleId)) list = 'ol';
+    }
+    const sizes = runs.filter(r => r.text.trim()).map(r => r.sz).filter(Boolean);
+    const size = sizes.length && Math.max(...sizes) - Math.min(...sizes) <= 0.4 ? Math.max(...sizes) : null;
+    blocks.push({ type: 'p', runs, text, level, list, size });
+  };
+  const handleTable = tbl => {
+    const rows = wKids(tbl, 'tr').map(tr => wKids(tr, 'tc').map(tc =>
+      wKids(tc, 'p').map(p => runsToHtml(getRuns(p, null), false).trim()).filter(Boolean).join(' ')));
+    const filled = rows.filter(r => r.some(Boolean));
+    if (filled.length) blocks.push({ type: 'table', rows: filled });
+  };
+  const handleBody = el => Array.from(el.children).forEach(c => {
+    if (c.localName === 'p') handleP(c);
+    else if (c.localName === 'tbl') handleTable(c);
+    else if (c.localName === 'sdt') { const content = wFirst(c, 'sdtContent'); if (content) handleBody(content); }
+  });
+  handleBody(body);
+
+  // No heading styles in the file: use font sizes instead (largest = H1, next = H2 ...)
+  const paras = blocks.filter(b => b.type === 'p' && !b.list);
+  if (!paras.some(b => b.level)) {
+    const w = {};
+    paras.forEach(b => { if (b.size) { const k = Math.round(b.size * 2) / 2; w[k] = (w[k] || 0) + b.text.length; } });
+    const keys = Object.keys(w);
+    if (keys.length) {
+      const body = +keys.sort((a, b) => w[b] - w[a])[0];
+      const cands = paras.filter(b => b.size && b.size > body + 0.9 && b.text.length <= 160);
+      const sizes = [...new Set(cands.map(b => Math.round(b.size * 10) / 10))].sort((a, b) => b - a);
+      const clusters = [];
+      sizes.forEach(v => { const last = clusters[clusters.length - 1]; if (last && last.min - v <= 0.8) last.min = v; else clusters.push({ max: v, min: v }); });
+      cands.forEach(b => { const i = clusters.findIndex(k => b.size <= k.max + 0.05 && b.size >= k.min - 0.05); b.level = Math.min(i + 1, 6); });
+    }
+  }
+
+  const out = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    if (b.type === 'table') {
+      out.push('<table>' + b.rows.map((r, ri) => `<tr>${r.map(c => ri === 0 ? `<th>${c}</th>` : `<td>${c}</td>`).join('')}</tr>`).join('') + '</table>');
+    } else if (b.level) {
+      out.push(`<h${b.level}>${runsToHtml(b.runs, true).trim()}</h${b.level}>`);
+    } else if (b.list) {
+      const items = [];
+      let j = i;
+      while (j < blocks.length && blocks[j].type === 'p' && !blocks[j].level && blocks[j].list === b.list) { items.push(runsToHtml(blocks[j].runs, false).trim()); j++; }
+      out.push(`<${b.list}>${items.map(x => `<li>${x}</li>`).join('')}</${b.list}>`);
+      i = j - 1;
+    } else {
+      out.push(`<p>${runsToHtml(b.runs, false).trim()}</p>`);
+    }
+  }
+  return out.join('\n');
+}
+
+async function handleFile(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  $('status').innerHTML = `<div>Reading ${esc(file.name)} ...</div>`;
+  try {
+    let html;
+    if (ext === 'pdf') html = await readPdf(file);
+    else if (ext === 'docx') html = await readDocx(file);
+    else if (ext === 'doc') throw new Error('Old .doc files cannot be read. Open it in Word, choose Save As, and save it as .docx.');
+    else throw new Error('Please choose a PDF or a Word (.docx) file.');
+    if (!html.trim()) throw new Error('No text found in this file.');
+    srcHtml = html;
+    lastPasted = htmlToPlain(html).replace(/\n{3,}/g, '\n\n').trim();
+    $('src').value = lastPasted;
+    render();
+  } catch (e) {
+    $('status').innerHTML = `<div class="bad">${esc(e.message || String(e))}</div>`;
+  }
+}
+
+/* =========================================================
+   Convert, checks, output
+   ========================================================= */
+const hasHeadings = h => /<h[1-6]\b/.test(h);
+const hasStructure = h => /<(h[1-6]|table|ul|ol)\b/.test(h);
+
+function convert(o) {
+  let exact = null;
+  if (srcHtml) {
+    const r = cleanRich(srcHtml, { ...o, sizeHeads: true });
+    if (hasHeadings(r.html)) return { r, guessed: false };
+    if (hasStructure(r.html)) exact = r;
+  }
+  const text = $('src').value;
+  if (!text.trim()) return { r: { html: '', meta: {} }, guessed: false };
+  const g = cleanRich(textToHtml(text), o);
+  if (exact && !hasHeadings(g.html)) return { r: exact, guessed: false };
+  return { r: g, guessed: true };
+}
+
+const META_FIELDS = [['title', 'Post title', 0], ['slug', 'Slug', 0], ['mt', 'Meta title', 60], ['md', 'Meta description', 160], ['alt', 'Image alt text', 0]];
+
+function renderMeta(meta) {
+  const rows = META_FIELDS.filter(f => meta[f[0]]).map(([k, label, max]) => {
+    let val = meta[k];
+    if (k === 'slug') val = val.split('/').filter(Boolean).pop() || val;
+    const over = max && val.length > max;
+    return `<div class="mrow"><label>${label}</label><input readonly value="${escAttr(val)}">` +
+      `<span class="cnt${over ? ' bad' : ''}">${max ? val.length + '/' + max : ''}</span><button class="btn ghost small mcopy">Copy</button></div>`;
+  });
+  $('metaCard').classList.toggle('hide', !rows.length);
+  $('meta').innerHTML = rows.join('');
+}
+
+function checks(html, guessed) {
+  if (!html.trim()) return '';
+  const box = document.createElement('div');
+  box.innerHTML = html;
+  const hs = Array.from(box.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+  const words = (box.textContent.trim().match(/\S+/g) || []).length;
+  const msgs = [`<div class="good">${hs.length} headings, ${words} words</div>`];
+  if (!hs.length) msgs.push('<div class="bad">No headings found. Copy the content from the original Google Doc or Word file.</div>');
+  if (guessed) msgs.push('<div class="bad">The pasted text has no heading data, so headings were detected from the text. Check the levels in the Heading levels box below.</div>');
+  const h1s = hs.filter(h => h.tagName === 'H1').length;
+  if (h1s > 1) msgs.push(`<div class="bad">Multiple H1 tags (${h1s}). Keep only one per post.</div>`);
+  let prev = 0;
+  for (const h of hs) {
+    const l = +h.tagName[1];
+    if (prev && l > prev + 1) msgs.push(`<div class="bad">${h.tagName} follows H${prev}. A heading level is skipped.</div>`);
+    prev = l;
+  }
+  return msgs.join('');
+}
+
+function renderLevels(code, openIt) {
+  const items = [];
+  const re = /<h([1-6])>([\s\S]*?)<\/h\1>/g;
+  let m;
+  while ((m = re.exec(code))) items.push({ lvl: +m[1], text: m[2].replace(/<[^>]+>/g, '') });
+  const card = $('levelsCard');
+  card.classList.toggle('hide', !items.length);
+  $('levelsSum').textContent = `Heading levels (${items.length})`;
+  if (openIt !== undefined) card.open = openIt;
+  $('levels').innerHTML = items.map((h, i) =>
+    `<div class="lrow" style="margin-left:${(h.lvl - 1) * 10}px"><select data-i="${i}" aria-label="Heading level">` +
+    [1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === h.lvl ? ' selected' : ''}>H${n}</option>`).join('') +
+    `</select><span>${h.text}</span></div>`).join('');
+}
+
+function parseLinks(code) {
+  const out = [];
+  const re = /<a href="([^"]*)"([^>]*)>([\s\S]*?)<\/a>/g;
+  let m;
+  while ((m = re.exec(code))) out.push({ href: m[1], newTab: /target="_blank"/.test(m[2]), text: m[3].replace(/<[^>]+>/g, '') });
+  return out;
+}
+function setLinks(code, fn) { // fn(href, index) -> 'new' | 'same' | null (leave as is)
+  let k = -1;
+  return code.replace(/<a href="([^"]*)"([^>]*)>/g, (all, href, rest) => {
+    k++;
+    const mode = fn(href, k);
+    if (!mode) return all;
+    const r = rest.replace(/\s*target="_blank"/, '').replace(/\s*rel="noopener"/, '');
+    return `<a href="${href}"${r}${mode === 'new' ? ' target="_blank" rel="noopener"' : ''}>`;
+  });
+}
+function shortUrl(u) { const d = u.replace(/&amp;/g, '&').replace(/^https?:\/\/(www\.)?/i, ''); return d.length > 60 ? d.slice(0, 57) + '...' : d; }
+
+function renderLinks(code, openIt) {
+  const links = parseLinks(code);
+  const card = $('linksCard');
+  card.classList.toggle('hide', !links.length);
+  const same = links.filter(l => !l.newTab).length;
+  $('linksSum').textContent = `Links (${links.length}): ${same} same tab, ${links.length - same} new tab`;
+  if (openIt !== undefined) card.open = openIt;
+  const counts = {};
+  links.forEach(l => { const h = hostOf(l.href); if (h) counts[h] = (counts[h] || 0) + 1; });
+  $('domains').innerHTML = Object.keys(counts).map(h =>
+    `<label class="dom"><input type="checkbox" data-host="${escAttr(h)}"${myDomains.has(h) ? ' checked' : ''}> <span><strong>${esc(h)}</strong> is my website (${counts[h]} link${counts[h] > 1 ? 's' : ''})</span></label>`).join('');
+  $('links').innerHTML = links.map((l, i) => {
+    const none = /^(mailto:|tel:|sms:)/i.test(l.href);
+    return `<div class="lk"><select data-i="${i}" aria-label="Link opens in"${none ? ' disabled' : ''}>` +
+      `<option value="same"${!l.newTab ? ' selected' : ''}>Same tab</option><option value="new"${l.newTab ? ' selected' : ''}>New tab</option></select>` +
+      `<div>${esc(l.text)}<small>${esc(shortUrl(l.href))}</small></div></div>`;
+  }).join('');
+}
+
+let lastGuessed = false;
+function render() {
+  const o = { dropH1: $('o-h1').checked, wrapP: $('o-wrapp').checked, mine: myDomains };
+  const full = convert({ ...o, dropH1: false });
+  const res = o.dropH1 ? convert(o) : full;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = full.r.html;
+  const h1 = tmp.querySelector('h1');
+  const meta = Object.assign({}, full.r.meta);
+  if (h1) meta.title = h1.textContent.trim();
+  renderMeta(meta);
+  lastGuessed = res.guessed;
+  $('code').value = res.r.html;
+  $('status').innerHTML = checks(res.r.html, res.guessed);
+  renderLevels(res.r.html, res.guessed);
+  renderLinks(res.r.html, true);
+}
+
+async function copyFrom(el, btn, label) {
+  if (!el.value) return;
+  let ok = false;
+  try { await navigator.clipboard.writeText(el.value); ok = true; } catch (e) {}
+  if (!ok) { el.focus(); el.select(); try { ok = document.execCommand('copy'); } catch (e) {} }
+  btn.textContent = ok ? 'Copied' : 'Select and copy manually';
+  setTimeout(() => (btn.textContent = label), 1600);
+}
+
+function htmlToPlain(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.body.querySelectorAll('br').forEach(b => b.replaceWith('\n'));
+  doc.body.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li,tr').forEach(e => e.append('\n'));
+  return doc.body.textContent;
+}
+
+/* =========================================================
+   Events
+   ========================================================= */
+$('src').addEventListener('paste', e => {
+  const cd = e.clipboardData;
+  if (!cd) return; // browser pastes plain text itself
+  const html = cd.getData('text/html') || '';
+  let text = cd.getData('text/plain') || '';
+  if (!html && !text) return;
+  e.preventDefault();
+  if (!text) text = htmlToPlain(html);
+  srcHtml = html || null;
+  lastPasted = text;
+  $('src').value = text;
+  render();
+});
+$('src').addEventListener('input', () => {
+  if ($('src').value !== lastPasted) srcHtml = null; // typed or edited by hand: use the text
+  render();
+});
+$('pickFile').onclick = () => $('file').click();
+$('file').onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ''; };
+$('clear').onclick = () => { srcHtml = null; lastPasted = ''; $('src').value = ''; render(); };
+$('o-h1').addEventListener('change', render);
+$('o-wrapp').addEventListener('change', render);
+$('code').addEventListener('input', () => {
+  $('status').innerHTML = checks($('code').value, lastGuessed);
+  renderLevels($('code').value);
+  renderLinks($('code').value);
+});
+$('levels').addEventListener('change', e => {
+  const sel = e.target.closest('select');
+  if (!sel) return;
+  const idx = +sel.dataset.i, lvl = sel.value;
+  let k = -1;
+  $('code').value = $('code').value.replace(/<h([1-6])>([\s\S]*?)<\/h\1>/g, (all, l, inner) => { k++; return k === idx ? `<h${lvl}>${inner}</h${lvl}>` : all; });
+  $('status').innerHTML = checks($('code').value, lastGuessed);
+  sel.closest('.lrow').style.marginLeft = (lvl - 1) * 10 + 'px';
+});
+$('links').addEventListener('change', e => {
+  const sel = e.target.closest('select');
+  if (!sel) return;
+  const idx = +sel.dataset.i;
+  $('code').value = setLinks($('code').value, (href, k) => (k === idx ? sel.value : null));
+  renderLinks($('code').value);
+});
+$('domains').addEventListener('change', e => {
+  const cb = e.target.closest('input[data-host]');
+  if (!cb) return;
+  const host = cb.dataset.host;
+  if (cb.checked) myDomains.add(host); else myDomains.delete(host);
+  saveDomains();
+  $('code').value = setLinks($('code').value, href => (hostOf(href) === host ? (cb.checked ? 'same' : 'new') : null));
+  renderLinks($('code').value);
+});
+$('copy').onclick = () => copyFrom($('code'), $('copy'), 'Copy code');
+$('meta').addEventListener('click', e => {
+  const b = e.target.closest('.mcopy');
+  if (b) copyFrom(b.parentNode.querySelector('input'), b, 'Copy');
+});
+</script>
+</body>
+</html>
