@@ -4,112 +4,216 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<link rel="icon" href="data:,">
+<meta name="theme-color" content="#135e96">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
 <title>WordPress post formatter</title>
 <style>
-  :root { --ink:#1d2327; --muted:#646970; --bg:#f0f0f1; --line:#c3c4c7; --blue:#2271b1; --blue-dark:#135e96; --warn:#b32d2e; --ok:#00a32a; }
+  :root { --ink:#1d2327; --muted:#646970; --bg:#eef1f5; --line:#d0d5dd; --blue:#2271b1; --blue-dark:#135e96; --navy:#14202b; --amber:#f0b849; --warn:#b32d2e; --ok:#00a32a; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:15px; line-height:1.5; }
-  .wrap { max-width:780px; margin:0 auto; padding:24px 16px 48px; }
-  h1 { font-size:22px; margin:0 0 4px; font-weight:600; }
-  .sub { color:var(--muted); margin:0 0 20px; font-size:14px; }
-  .card { background:#fff; border:1px solid var(--line); border-radius:4px; padding:14px 16px; margin-bottom:14px; }
-  .card h2 { font-size:15px; margin:0 0 8px; font-weight:600; }
+
+  /* header */
+  .hero { background:linear-gradient(135deg,var(--navy) 0%,#17476b 55%,var(--blue-dark) 100%); color:#fff; border-bottom:4px solid var(--amber); }
+  .hero-in { max-width:1180px; margin:0 auto; padding:20px 16px; display:flex; align-items:center; justify-content:space-between; gap:16px 28px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:center; gap:14px; min-width:0; }
+  .logo { flex:none; width:56px; height:56px; filter:drop-shadow(0 3px 8px rgba(0,0,0,.35)); }
+  h1 { font-size:26px; line-height:1.2; margin:0; font-weight:700; letter-spacing:-.01em; }
+  .sub { margin:4px 0 0; font-size:14px; color:rgba(255,255,255,.82); }
+  .flow { display:flex; gap:8px; list-style:none; margin:0; padding:0; flex-wrap:wrap; }
+  .flow li { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); border-radius:999px; padding:5px 12px; font-size:13px; white-space:nowrap; }
+  .flow b { color:var(--amber); margin-right:4px; }
+
+  /* layout: one column on phones and tablets, two columns on desktop */
+  .wrap { max-width:1180px; margin:0 auto; padding:20px 16px 48px; }
+  .layout { display:flex; flex-direction:column; gap:16px; max-width:820px; margin:0 auto; }
+  .col { display:contents; }
+  .o1 { order:1; } .o2 { order:2; } .o3 { order:3; } .o4 { order:4; } .o5 { order:5; } .o6 { order:6; }
+  @media (min-width:960px) {
+    .layout { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,6fr); gap:20px; max-width:none; align-items:start; }
+    .col { display:flex; flex-direction:column; gap:16px; }
+    #src { height:380px; }
+    #code { height:520px; }
+    .hero-in { padding:24px 16px; }
+  }
+
+  .card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px 18px; box-shadow:0 1px 3px rgba(16,24,40,.06); }
+  .card h2 { font-size:16px; margin:0; font-weight:700; display:flex; align-items:center; gap:10px; }
+  .num { flex:none; width:26px; height:26px; border-radius:50%; background:var(--blue); color:#fff; font-size:14px; display:inline-flex; align-items:center; justify-content:center; }
   .note { font-size:13px; color:var(--muted); margin:6px 0 0; }
-  input[type=text] { width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:3px; font-size:14px; }
-  .btn { border:1px solid var(--blue); background:var(--blue); color:#fff; padding:8px 18px; font-size:14px; border-radius:3px; cursor:pointer; font-weight:600; }
+  .btn { border:1px solid var(--blue); background:var(--blue); color:#fff; padding:9px 18px; font-size:14px; border-radius:6px; cursor:pointer; font-weight:600; min-height:40px; }
   .btn:hover { background:var(--blue-dark); }
   .btn.ghost { background:#fff; color:var(--blue); }
-  .btn.small { padding:4px 10px; font-size:13px; }
-  .btn:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
-  textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:3px; resize:vertical; }
-  #src { height:180px; font-size:14px; }
-  #code { height:340px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; line-height:1.5; }
-  .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
-  #status { font-size:13px; margin-top:8px; }
+  .btn.ghost:hover { background:#f3f7fb; }
+  .btn.small { padding:5px 12px; font-size:13px; min-height:34px; }
+  .btn.big { padding:10px 24px; font-size:15px; min-height:44px; box-shadow:0 2px 6px rgba(34,113,177,.35); }
+  .btn:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible, summary:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
+  textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; resize:vertical; }
+  textarea:focus { border-color:var(--blue); }
+  #src { height:200px; font-size:14px; margin-top:12px; }
+  #code { height:340px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; line-height:1.5; margin-top:12px; background:#fbfcfd; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:8px 12px; flex-wrap:wrap; }
+  #status { font-size:13px; margin-top:10px; }
   #status div { margin:2px 0; }
   .bad { color:var(--warn); } .good { color:var(--ok); }
   .mrow { display:grid; grid-template-columns:110px 1fr auto auto; gap:6px; align-items:center; margin:5px 0; font-size:13px; }
   .mrow label { color:var(--muted); }
-  .mrow input { width:100%; padding:4px 6px; border:1px solid var(--line); border-radius:3px; font-size:13px; background:#fafafa; }
+  .mrow input { width:100%; padding:5px 8px; border:1px solid var(--line); border-radius:5px; font-size:13px; background:#f8f9fb; }
   .mrow .cnt { font-size:12px; color:var(--muted); min-width:46px; text-align:right; }
   .mrow .cnt.bad { color:var(--warn); }
-  label.chk { display:flex; align-items:center; gap:6px; font-size:13px; margin-top:8px; cursor:pointer; }
+  label.chk { display:flex; align-items:flex-start; gap:8px; font-size:13px; margin-top:10px; cursor:pointer; }
+  label.chk input { margin-top:3px; flex:none; width:16px; height:16px; }
   .lrow { display:flex; align-items:center; gap:8px; margin:5px 0; font-size:13px; }
-  .lrow select { padding:3px 4px; border:1px solid var(--line); border-radius:3px; font-size:13px; background:#fff; flex:none; }
+  .lrow select, .lk select { padding:4px 5px; border:1px solid var(--line); border-radius:5px; font-size:13px; background:#fff; flex:none; }
   .lrow span { min-width:0; overflow-wrap:anywhere; }
   .lk { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; }
-  .lk select { padding:3px 4px; border:1px solid var(--line); border-radius:3px; font-size:13px; background:#fff; flex:none; }
   .lk div { min-width:0; overflow-wrap:anywhere; }
   .lk small { display:block; color:var(--muted); font-size:12px; }
-  .dom { display:flex; align-items:center; gap:6px; margin:4px 0; font-size:13px; cursor:pointer; }
+  .dom { display:flex; align-items:center; gap:8px; margin:5px 0; font-size:13px; cursor:pointer; }
   .hide { display:none !important; }
-  details { font-size:14px; } summary { cursor:pointer; font-weight:600; }
+  details { font-size:14px; } summary { cursor:pointer; font-weight:700; }
   details ol { margin:8px 0 0; padding-left:20px; }
-  .foot { text-align:center; color:var(--muted); font-size:12px; margin-top:20px; }
-  @media (max-width:520px) { .mrow { grid-template-columns:1fr auto auto; } .mrow label { grid-column:1 / -1; } }
+  /* image converter */
+  .iopts { display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center; margin:12px 0; font-size:13px; }
+  .iopts label { display:flex; align-items:center; gap:8px; }
+  .iopts input[type=range] { width:150px; accent-color:var(--blue); }
+  .iopts select { padding:4px 6px; border:1px solid var(--line); border-radius:5px; font-size:13px; background:#fff; }
+  .drop { border:2px dashed #9bb8d3; background:#f6fafe; border-radius:10px; padding:24px 16px; text-align:center; cursor:pointer; font-weight:600; color:var(--blue-dark); }
+  .drop small { display:block; font-weight:400; color:var(--muted); margin-top:2px; }
+  .drop:hover, .drop.over, .drop:focus-visible { background:#eaf3fb; border-color:var(--blue); }
+  .irow { display:grid; grid-template-columns:60px minmax(0,1fr) auto; gap:12px; align-items:center; padding:10px 0; border-top:1px solid #e6e9ee; font-size:13px; }
+  .irow:first-child { border-top:0; }
+  .thumb { width:60px; height:60px; border-radius:6px; overflow:hidden; border:1px solid var(--line); background:#fff repeating-conic-gradient(#e8ebef 0% 25%, #fff 0% 50%) 50% / 12px 12px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; }
+  .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .iname { font-weight:600; overflow-wrap:anywhere; }
+  .imeta { color:var(--muted); }
+  .iact { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  a.btn { text-decoration:none; display:inline-flex; align-items:center; }
+  .itotal { margin-top:12px; padding-top:12px; border-top:1px solid #e6e9ee; }
+  .foot { text-align:center; color:var(--muted); font-size:12px; margin:24px 0 0; }
+  @media (max-width:520px) {
+    h1 { font-size:21px; }
+    .logo { width:46px; height:46px; }
+    .hero-in { padding:16px 14px; }
+    .flow li { font-size:12px; padding:4px 10px; }
+    .wrap { padding:14px 12px 40px; }
+    .card { padding:14px; }
+    .mrow { grid-template-columns:1fr auto auto; } .mrow label { grid-column:1 / -1; }
+    #copy { width:100%; }
+    .irow { grid-template-columns:48px minmax(0,1fr); }
+    .thumb { width:48px; height:48px; }
+    .iact { grid-column:1 / -1; justify-content:flex-start; }
+  }
 </style>
 </head>
 <body>
+<header class="hero">
+  <div class="hero-in">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Post formatter logo"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8fd6"/><stop offset="1" stop-color="#135e96"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#lg)"/><path d="M18 11h20l11 11v28a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V15a4 4 0 0 1 4-4z" fill="#fff"/><path d="M38 11v11h11z" fill="#bcd7ee"/><rect x="19" y="26" width="17" height="4" rx="2" fill="#2271b1"/><rect x="19" y="34" width="24" height="2.6" rx="1.3" fill="#c3c4c7"/><rect x="19" y="39.5" width="19" height="2.6" rx="1.3" fill="#c3c4c7"/><circle cx="46" cy="46" r="11" fill="#f0b849"/><path d="M44 41l-4.5 5 4.5 5M48 41l4.5 5-4.5 5" stroke="#1d2327" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <h1>WordPress post formatter</h1>
+        <p class="sub">Turn the SEO document into clean WordPress code in minutes.</p>
+      </div>
+    </div>
+    <ul class="flow" aria-label="Steps">
+      <li><b>1</b>Paste or upload</li>
+      <li><b>2</b>Copy the code</li>
+      <li><b>3</b>Paste in WordPress</li>
+      <li><a href="#images" style="color:inherit;text-decoration:none"><b>+</b>Images to WebP</a></li>
+    </ul>
+  </div>
+</header>
+
 <div class="wrap">
-  <h1>WordPress post formatter</h1>
-  <p class="sub">Paste the SEO document, copy the code, paste it into the WordPress Code editor.</p>
-
-  <div class="card">
-    <div class="row">
-      <h2 style="margin:0">1. Paste the document content</h2>
-      <button class="btn ghost small" id="clear">Clear</button>
+  <div class="layout">
+   <div class="col">
+    <div class="card o1">
+      <div class="row">
+        <h2><span class="num">1</span>Paste the document content</h2>
+        <button class="btn ghost small" id="clear">Clear</button>
+      </div>
+      <textarea id="src" spellcheck="false" placeholder="Paste the full document here (select all, copy, paste)."></textarea>
+      <p class="note">Best result: copy from the original Google Doc or Word file. Headings, lists, tables, bold and links are then taken exactly as in the document.</p>
+      <div class="row" style="margin:12px 0 0">
+        <span class="note" style="margin:0;flex:1 1 220px">Got a PDF or Word file? Upload it instead. The file keeps its links and heading levels, but copied text does not.</span>
+        <button class="btn ghost small" id="pickFile">Choose PDF or Word file</button>
+        <input type="file" id="file" accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hide">
+      </div>
     </div>
-    <textarea id="src" spellcheck="false" placeholder="Paste the full document here (select all, copy, paste)."></textarea>
-    <p class="note">Best result: copy from the original Google Doc or Word file. Headings, lists, tables, bold and links are then taken exactly as in the document.</p>
-    <div class="row" style="margin:10px 0 0">
-      <span class="note" style="margin:0">Got a PDF or Word file? Upload it instead. The file keeps its links and heading levels, but copied text does not.</span>
-      <button class="btn ghost small" id="pickFile">Choose PDF or Word file</button>
-      <input type="file" id="file" accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hide">
+
+    <div class="card o6">
+      <details>
+        <summary>How to add this to WordPress</summary>
+        <ol>
+          <li>Click <strong>Copy code</strong>.</li>
+          <li>Open the post. Click the three dots at the top right and choose <strong>Code editor</strong>. (Classic editor: use the <strong>Text</strong> tab.)</li>
+          <li>Paste the code. WordPress makes a paragraph from each block of text separated by a blank line.</li>
+          <li>Add the title, slug and SEO fields from the SEO fields box, then publish.</li>
+        </ol>
+      </details>
     </div>
-  </div>
+   </div>
 
-  <div class="card">
-    <div class="row">
-      <h2 style="margin:0">2. Copy the code</h2>
-      <button class="btn" id="copy">Copy code</button>
+   <div class="col">
+    <div class="card o2">
+      <div class="row">
+        <h2><span class="num">2</span>Copy the code</h2>
+        <button class="btn big" id="copy">Copy code</button>
+      </div>
+      <textarea id="code" spellcheck="false" placeholder="The converted code appears here. You can edit it if needed."></textarea>
+      <label class="chk"><input type="checkbox" id="o-h1"> Remove the H1 from the code (use it only as the WordPress post title)</label>
+      <label class="chk"><input type="checkbox" id="o-wrapp"> Wrap paragraphs in &lt;p&gt; tags (unticked = plain text paragraphs, no &lt;p&gt; tags)</label>
+      <label class="chk"><input type="checkbox" id="o-listmb"> Add 10px bottom margin to lists (UL and OL), bottom side only</label>
+      <div id="status" aria-live="polite"></div>
     </div>
-    <textarea id="code" spellcheck="false" placeholder="The converted code appears here. You can edit it if needed."></textarea>
-    <label class="chk"><input type="checkbox" id="o-h1"> Remove the H1 from the code (use it only as the WordPress post title)</label>
-    <label class="chk"><input type="checkbox" id="o-wrapp"> Wrap paragraphs in &lt;p&gt; tags (unticked = plain text paragraphs, no &lt;p&gt; tags)</label>
-    <div id="status" aria-live="polite"></div>
-  </div>
 
-  <details class="card hide" id="levelsCard">
-    <summary id="levelsSum">Heading levels</summary>
-    <p class="note">Change a level here and the code updates. Match each heading to the document.</p>
-    <div id="levels"></div>
-  </details>
-
-  <details class="card hide" id="linksCard">
-    <summary id="linksSum">Links</summary>
-    <p class="note">Tick your own websites once. Their links open in the same tab, all other links open in a new tab. The tool remembers your websites. You can also change any single link.</p>
-    <div id="domains"></div>
-    <div id="links"></div>
-  </details>
-
-  <div class="card hide" id="metaCard">
-    <h2>SEO fields</h2>
-    <div id="meta"></div>
-  </div>
-
-  <div class="card">
-    <details>
-      <summary>How to add this to WordPress</summary>
-      <ol>
-        <li>Click <strong>Copy code</strong>.</li>
-        <li>Open the post. Click the three dots at the top right and choose <strong>Code editor</strong>. (Classic editor: use the <strong>Text</strong> tab.)</li>
-        <li>Paste the code. WordPress makes a paragraph from each block of text separated by a blank line.</li>
-        <li>Add the title, slug and SEO fields from the SEO fields box, then publish.</li>
-      </ol>
+    <details class="card hide o3" id="levelsCard">
+      <summary id="levelsSum">Heading levels</summary>
+      <p class="note">Change a level here and the code updates. Match each heading to the document.</p>
+      <div id="levels"></div>
     </details>
+
+    <details class="card hide o4" id="linksCard">
+      <summary id="linksSum">Links</summary>
+      <p class="note">Tick your own websites once. Their links open in the same tab, all other links open in a new tab. The tool remembers your websites. You can also change any single link.</p>
+      <div id="domains"></div>
+      <div id="links"></div>
+    </details>
+
+    <div class="card hide o5" id="metaCard">
+      <h2>SEO fields</h2>
+      <div id="meta" style="margin-top:8px"></div>
+    </div>
+   </div>
   </div>
-  <p class="foot">WordPress post formatter v1.0. Everything runs in your browser. Nothing is uploaded.</p>
+  <section class="card" id="images" style="margin-top:20px">
+    <div class="row">
+      <h2><span class="num" style="background:var(--amber);color:var(--ink)">+</span>Convert images to WebP</h2>
+      <button class="btn ghost small hide" id="i-clear">Clear all</button>
+    </div>
+    <p class="note">Convert the JPG and PNG images from the SEO team to WebP. The conversion happens in your browser, nothing is uploaded.</p>
+    <div class="iopts">
+      <label>Quality <input type="range" id="i-q" min="30" max="100" value="80" aria-label="WebP quality"> <output id="i-qv">80</output></label>
+      <label>Max width
+        <select id="i-max" aria-label="Maximum width">
+          <option value="0">Keep original size</option><option value="2560">2560 px</option><option value="1920">1920 px</option>
+          <option value="1600">1600 px</option><option value="1200">1200 px</option><option value="800">800 px</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="i-clean"> Clean file names (lowercase, hyphens)</label>
+    </div>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose JPG or PNG images">Drop JPG or PNG images here, or tap to choose<small>You can select many images at once</small></div>
+    <input type="file" id="i-file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple class="hide">
+    <div id="i-msg" class="note" aria-live="polite"></div>
+    <div id="i-list"></div>
+    <div class="row itotal hide" id="i-all"><span id="i-total" class="note" style="margin:0"></span><button class="btn" id="i-zip">Download all (ZIP)</button></div>
+  </section>
+
+  <p class="foot">WordPress post formatter v1.2. Everything runs in your browser. Nothing is uploaded.</p>
 </div>
 
 <script>
@@ -201,7 +305,11 @@ function walk(n, o) {
     return inner ? `<${t}>${inner}</${t}>\n\n` : '';
   }
   if (t === 'p') { const i = kids().trim(); return i ? (o.wrapP ? `<p>${i}</p>` : i) + '\n\n' : ''; }
-  if (t === 'ul' || t === 'ol') { const i = kids(); return i.trim() ? `<${t}>\n${i}</${t}>\n\n` : ''; }
+  if (t === 'ul' || t === 'ol') {
+    const i = kids();
+    const st = o.listMb && !(n.parentElement && n.parentElement.closest('li')) ? ' style="margin-bottom:10px;"' : ''; // top-level lists only
+    return i.trim() ? `<${t}${st}>\n${i}</${t}>\n\n` : '';
+  }
   if (t === 'li') { const i = oneLine(kids()); return i ? `<li>${i}</li>\n` : ''; }
   if (t === 'blockquote') { const i = kids().replace(/\n{2,}/g, '\n').trim(); return i ? `<blockquote>\n${i}\n</blockquote>\n\n` : ''; }
   if (t === 'table') { const i = kids(); return i.trim() ? `<table>\n${i}</table>\n\n` : ''; }
@@ -1027,7 +1135,7 @@ function renderLinks(code, openIt) {
 
 let lastGuessed = false;
 function render() {
-  const o = { dropH1: $('o-h1').checked, wrapP: $('o-wrapp').checked, mine: myDomains };
+  const o = { dropH1: $('o-h1').checked, wrapP: $('o-wrapp').checked, listMb: $('o-listmb').checked, mine: myDomains };
   const full = convert({ ...o, dropH1: false });
   const res = o.dropH1 ? convert(o) : full;
   const tmp = document.createElement('div');
@@ -1084,6 +1192,7 @@ $('file').onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0])
 $('clear').onclick = () => { srcHtml = null; lastPasted = ''; $('src').value = ''; render(); };
 $('o-h1').addEventListener('change', render);
 $('o-wrapp').addEventListener('change', render);
+$('o-listmb').addEventListener('change', render);
 $('code').addEventListener('input', () => {
   $('status').innerHTML = checks($('code').value, lastGuessed);
   renderLevels($('code').value);
@@ -1119,6 +1228,150 @@ $('meta').addEventListener('click', e => {
   const b = e.target.closest('.mcopy');
   if (b) copyFrom(b.parentNode.querySelector('input'), b, 'Copy');
 });
+
+/* =========================================================
+   Image converter: JPG / PNG -> WebP (runs in the browser)
+   ========================================================= */
+let imgItems = [], imgSeq = 0, imgRun = 0;
+const fmtSize = n => n < 1024 ? n + ' B' : n < 1048576 ? Math.round(n / 1024) + ' KB' : (n / 1048576).toFixed(2) + ' MB';
+
+function outNames() { // unique .webp names for the current list
+  const used = {};
+  return imgItems.map(it => {
+    let base = it.file.name.replace(/\.[^.]+$/, '');
+    if ($('i-clean').checked) base = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'image';
+    let name = base, n = 1;
+    while (used[name.toLowerCase()]) name = base + '-' + (n++);
+    used[name.toLowerCase()] = true;
+    return name + '.webp';
+  });
+}
+
+async function convertImage(file) {
+  const maxW = +$('i-max').value, q = +$('i-q').value / 100;
+  const bmp = await createImageBitmap(file);
+  let w = bmp.width, h = bmp.height;
+  if (maxW && w > maxW) { h = Math.round(h * maxW / w); w = maxW; } // only shrink, never enlarge
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(bmp, 0, 0, w, h);
+  if (bmp.close) bmp.close();
+  const blob = await new Promise(r => cv.toBlob(r, 'image/webp', q));
+  if (!blob || blob.type !== 'image/webp') throw new Error('This browser cannot create WebP files. Use a current Chrome, Edge or Firefox.');
+  return { blob, w, h };
+}
+
+function renderImages() {
+  const names = outNames();
+  const done = imgItems.filter(i => i.status === 'done');
+  $('i-list').innerHTML = imgItems.map((it, k) => {
+    const meta = it.status === 'done'
+      ? (() => {
+          const saved = Math.round((1 - it.blob.size / it.file.size) * 100);
+          return `${fmtSize(it.file.size)} &rarr; <strong>${fmtSize(it.blob.size)}</strong> ` +
+            (saved > 0 ? `<span class="good">(${saved}% smaller)</span>` : `<span class="bad">(WebP is larger. Lower the quality.)</span>`) + ` &middot; ${it.w}&times;${it.h}`;
+        })()
+      : it.status === 'error' ? `<span class="bad">${esc(it.err)}</span>` : 'Converting...';
+    return `<div class="irow"><div class="thumb">${it.url ? `<img src="${it.url}" alt="">` : '...'}</div>` +
+      `<div><div class="iname">${esc(names[k])}</div><div class="imeta">${meta}</div></div>` +
+      `<div class="iact">${it.status === 'done' ? `<a class="btn ghost small" href="${it.url}" download="${escAttr(names[k])}">Download</a>` : ''}` +
+      `<button class="btn ghost small" data-rm="${it.id}">Remove</button></div></div>`;
+  }).join('');
+  $('i-clear').classList.toggle('hide', !imgItems.length);
+  $('i-all').classList.toggle('hide', !done.length);
+  if (done.length) {
+    const a = done.reduce((s, i) => s + i.file.size, 0), b = done.reduce((s, i) => s + i.blob.size, 0);
+    $('i-total').textContent = `${done.length} image${done.length > 1 ? 's' : ''}: ${fmtSize(a)} to ${fmtSize(b)}` + (b < a ? ` (${Math.round((1 - b / a) * 100)}% smaller)` : '');
+    $('i-zip').classList.toggle('hide', done.length < 2);
+  }
+}
+
+async function convertAll() {
+  const my = ++imgRun;
+  for (const it of imgItems) {
+    if (my !== imgRun) return;
+    it.status = 'working';
+    renderImages();
+    try {
+      const r = await convertImage(it.file);
+      if (my !== imgRun) return;
+      if (it.url) URL.revokeObjectURL(it.url);
+      it.blob = r.blob; it.url = URL.createObjectURL(r.blob); it.w = r.w; it.h = r.h; it.status = 'done';
+    } catch (e) {
+      it.status = 'error'; it.err = e.message || 'This image could not be read.';
+    }
+  }
+  renderImages();
+}
+
+function addImages(files) {
+  const skipped = [];
+  Array.from(files).forEach(f => {
+    if (/\.(jpe?g|png)$/i.test(f.name) || /^image\/(jpeg|png)$/.test(f.type)) imgItems.push({ id: ++imgSeq, file: f, status: 'wait' });
+    else skipped.push(f.name);
+  });
+  $('i-msg').innerHTML = skipped.length ? `<span class="bad">Skipped (only JPG and PNG are accepted): ${esc(skipped.join(', '))}</span>` : '';
+  convertAll();
+}
+
+/* ZIP file (no compression: WebP is already compressed) */
+const crcTable = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = crcTable[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  let offset = 0;
+  const d = new Date();
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  files.forEach(f => {
+    const name = enc.encode(f.name), crc = crc32(f.data), len = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(10, time, true); lh.setUint16(12, date, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, len, true); lh.setUint32(22, len, true); lh.setUint16(26, name.length, true);
+    parts.push(lh.buffer, name, f.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(12, time, true); ch.setUint16(14, date, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, len, true); ch.setUint32(24, len, true); ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+    central.push(ch.buffer, name);
+    offset += 30 + name.length + len;
+  });
+  const cdSize = central.reduce((a, b) => a + (b.byteLength !== undefined ? b.byteLength : b.length), 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
+}
+
+let imgTimer;
+const imgAgain = () => { clearTimeout(imgTimer); imgTimer = setTimeout(() => { if (imgItems.length) convertAll(); }, 300); };
+$('i-q').addEventListener('input', () => { $('i-qv').textContent = $('i-q').value; imgAgain(); });
+$('i-max').addEventListener('change', imgAgain);
+$('i-clean').addEventListener('change', renderImages);
+$('drop').onclick = () => $('i-file').click();
+$('drop').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('i-file').click(); } });
+$('i-file').onchange = e => { const f = e.target.files; if (f.length) addImages(f); e.target.value = ''; };
+['dragenter', 'dragover'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.remove('over'); }));
+$('drop').addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) addImages(e.dataTransfer.files); });
+$('i-list').addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]');
+  if (!b) return;
+  const it = imgItems.find(i => i.id === +b.dataset.rm);
+  if (it && it.url) URL.revokeObjectURL(it.url);
+  imgItems = imgItems.filter(i => i !== it);
+  renderImages();
+});
+$('i-clear').onclick = () => { imgRun++; imgItems.forEach(i => i.url && URL.revokeObjectURL(i.url)); imgItems = []; $('i-msg').textContent = ''; renderImages(); };
+$('i-zip').onclick = async () => {
+  const names = outNames(), files = [];
+  for (let k = 0; k < imgItems.length; k++) if (imgItems[k].status === 'done') files.push({ name: names[k], data: new Uint8Array(await imgItems[k].blob.arrayBuffer()) });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(makeZip(files));
+  a.download = 'webp-images.zip';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+};
 </script>
 </body>
 </html>
