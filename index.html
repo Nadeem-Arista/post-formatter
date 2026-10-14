@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#135e96">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="favicon-16x16.png" type="image/png" sizes="16x16">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAABOvAAATrwFj5o7DAAAEEUlEQVR42r2X/VdTdRzHv39EUORDCKgIOUkGk5/8JQPL0wOBnE79YECYmKmQD9sCEy1jw5KZPyRimZWiIhCCsIH4MEVFth1PhT0geU4ng003hufEaWPvvt+b97Y17neXWLzPeZ9zd7ez1/t+P/f78CEkSFlGR+wyo2O3ptph11TbHmRW25DxYT8y9tyAek8f1B9cR/r717B091XqXjy16wrSqi4jbacVS967RH0Rqh0XsLjyPBZX9ODJinNIfbcbKfquByk6s416l6q8M5ZMpqy9N/M1RodXY3BAY7AjWvBUfRdSdBZqMxZpO5G8vcO7cGt7Xhh8mcERmAE4kredxcJtbQEpBBv2GXryh/B2LNjahgVbWkeTtO0xRKj5jMPPYP47rZhf/k0VoXCHHDyrug9VZwZh6r6DWuauXwTvswxR3xb8sXlQ8Efmn5F/4PpU4Egsb7GRTINtTO7JuwfuYSq68KNbCKEEnlTegoTNTV7CG/Y//YEpBegauC+EyDtwNSI8sawZiZubQHg1n6pYADFE/ie9EeEJm07TAJwX7r8GEEO8vP8KFz5vUyMI722fTgAxRK7JKguft/EUDcCZatGQqfMHWXj82ydBePM8OgFuycLjN5wA4S0yorq/+x3JW1rptGmZ1KtN8mFrWQAZ+BMbGlgA+RVO1LkIAQr2y5ertmNAFj73reMgvOU1GmIB5OBz1x8D4a3t0dC+ju9l4XNKv6YBOBuLqJERJy5ZexXZarXCNdiD8aHTgk+cpS/gxoZJ4bPXfQXC29VE+f1+uFz34HS6uHYNXYa7Zw08HStDfLOxAC9WmsLgs9d9yQLIb6miJiYm4PaMwu32yHrstxvwmJ8XgMOt2SFm90baV+GFitoQ+Kw3j4Lw9nNRw8MjEYfdaXlNAP3alI0Vy1XYXpwpmF2ze+w7Bx2J+NKjEnzW2i9AeIeJYPloGXw+36QeH+4TAM62HKxelYYMdSpuHVuBnxqegSYzFS9lL6EjkSP8Jq+iRoI/XnKEBuCcZJRq/PZJ4c9LX1FDpUqB/cjTUv3ZNbu3/tV04bO+RifB40o+B+EdoxQHGGpUHEBn1EvwuDc+A+Gd4ZTK57KFlECdHlqC3Jx/SpCrN0jwx4oP0wB6i1fuDHfX84eyBAE/vBeLIr6E9lMFmLP2sAR/tOjQKFmktdjlznDF9dcUh/Dd/zbCNHwOz2r3BsHrqetshLVLSg6QvC1VXOHYPGdT7d8LEXvycPghxBQe3ElYr8bapenCxRWOzfP8SiO0NXpojTqh5qHD/jc89vU6T1zJp48I3RFrk1i7NF148AoXPNXC4IUHAzFr6nJD+kMWgrVL/zucPnkYXBTr1Vi7lFTW3J9Q1jwWNXhh/VhsUV0/q7k07A/1F4nq5A+0UFZ8AAAAAElFTkSuQmCC" type="image/png" sizes="32x32"><!-- built-in copy: the icon still shows if the icon files are missing -->
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <title>WordPress post formatter</title>
@@ -49,6 +51,12 @@
   .btn.ghost { background:#fff; color:var(--blue); }
   .btn.ghost:hover { background:#f3f7fb; }
   .btn.small { padding:5px 12px; font-size:13px; min-height:34px; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .btn.fsbtn { display:inline-flex; align-items:center; gap:6px; }
+  .btn.fsbtn svg { width:16px; height:16px; flex:none; }
+  .card.fs { position:fixed; inset:0; z-index:1000; width:100%; height:100%; margin:0; border:0; border-radius:0; overflow:auto; display:flex; flex-direction:column; padding:14px 18px; background:#fff; box-shadow:none; }
+  .card.fs #code { flex:1 1 auto; height:auto; min-height:160px; resize:none; font-size:14px; }
+  body.fs-open { overflow:hidden; }
   .btn.big { padding:10px 24px; font-size:15px; min-height:44px; box-shadow:0 2px 6px rgba(34,113,177,.35); }
   .btn:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible, summary:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
   textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; resize:vertical; }
@@ -94,6 +102,7 @@
   a.btn { text-decoration:none; display:inline-flex; align-items:center; }
   .itotal { margin-top:12px; padding-top:12px; border-top:1px solid #e6e9ee; }
   .foot { text-align:center; color:var(--muted); font-size:12px; margin:24px 0 0; }
+  @media (min-width:960px) { #src { height:380px; } #code { height:520px; } } /* after the base rules so desktop gets the taller boxes */
   @media (max-width:520px) {
     h1 { font-size:21px; }
     .logo { width:46px; height:46px; }
@@ -102,7 +111,7 @@
     .wrap { padding:14px 12px 40px; }
     .card { padding:14px; }
     .mrow { grid-template-columns:1fr auto auto; } .mrow label { grid-column:1 / -1; }
-    #copy { width:100%; }
+    .btns { width:100%; } .btns .btn { flex:1; justify-content:center; }
     .irow { grid-template-columns:48px minmax(0,1fr); }
     .thumb { width:48px; height:48px; }
     .iact { grid-column:1 / -1; justify-content:flex-start; }
@@ -159,10 +168,13 @@
    </div>
 
    <div class="col">
-    <div class="card o2">
+    <div class="card o2" id="outCard">
       <div class="row">
         <h2><span class="num">2</span>Copy the code</h2>
-        <button class="btn big" id="copy">Copy code</button>
+        <div class="btns">
+          <button class="btn ghost fsbtn" id="fs" aria-pressed="false" title="Show the converted code in full screen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="fsIcon"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/></svg><span id="fsText">Full screen</span></button>
+          <button class="btn big" id="copy">Copy code</button>
+        </div>
       </div>
       <textarea id="code" spellcheck="false" placeholder="The converted code appears here. You can edit it if needed."></textarea>
       <label class="chk"><input type="checkbox" id="o-h1"> Remove the H1 from the code (use it only as the WordPress post title)</label>
@@ -213,7 +225,7 @@
     <div class="row itotal hide" id="i-all"><span id="i-total" class="note" style="margin:0"></span><button class="btn" id="i-zip">Download all (ZIP)</button></div>
   </section>
 
-  <p class="foot">WordPress post formatter v1.2. Everything runs in your browser. Nothing is uploaded.</p>
+  <p class="foot">WordPress post formatter v1.4. Everything runs in your browser. Nothing is uploaded.</p>
 </div>
 
 <script>
@@ -733,8 +745,13 @@ function buildFromPdf(pages) {
 
 async function loadPdfjs() {
   if (window.__pdfjs) return window.__pdfjs;
-  const V = '5.6.205';
-  for (const base of [`https://cdn.jsdelivr.net/npm/pdfjs-dist@${V}/build/`, `https://unpkg.com/pdfjs-dist@${V}/build/`]) {
+  const V = '5.6.205'; // pdf.js version that ships in the /pdfjs folder
+  const bases = [
+    ...(location.protocol === 'file:' ? [] : [new URL('pdfjs/', location.href).href]), // 1. the copy deployed with this site (works offline; browsers block it when the page is opened from a disk file)
+    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${V}/build/`,         // 2. backups, only used if the local copy is missing
+    `https://unpkg.com/pdfjs-dist@${V}/build/`,
+  ];
+  for (const base of bases) {
     try {
       const lib = await import(base + 'pdf.min.mjs');
       const code = await (await fetch(base + 'pdf.worker.min.mjs')).text();
@@ -742,7 +759,7 @@ async function loadPdfjs() {
       return (window.__pdfjs = lib);
     } catch (e) {}
   }
-  throw new Error('Could not load the PDF reader. Check your internet connection and try again.');
+  throw new Error('Could not load the PDF reader. Check that the pdfjs folder was uploaded with index.html, or check your internet connection.');
 }
 
 async function readPdf(file) {
@@ -1224,6 +1241,34 @@ $('domains').addEventListener('change', e => {
   renderLinks($('code').value);
 });
 $('copy').onclick = () => copyFrom($('code'), $('copy'), 'Copy code');
+/* Full screen view of the converted code (CSS overlay works everywhere, real browser full screen is used when available) */
+const FS_ICONS = {
+  open: '<path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/>',
+  close: '<path d="M6 2v4H2M10 2v4h4M6 14v-4H2M10 14v-4h4"/>',
+};
+let fsOn = false;
+const nativeFsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+function setFullScreen(on) {
+  fsOn = on;
+  $('outCard').classList.toggle('fs', on);
+  document.body.classList.toggle('fs-open', on);
+  $('fs').setAttribute('aria-pressed', on ? 'true' : 'false');
+  $('fs').title = on ? 'Back to the normal view' : 'Show the converted code in full screen';
+  $('fsText').textContent = on ? 'Exit full screen' : 'Full screen';
+  $('fsIcon').innerHTML = on ? FS_ICONS.close : FS_ICONS.open;
+  const card = $('outCard');
+  if (on) {
+    const req = card.requestFullscreen || card.webkitRequestFullscreen;
+    if (req) { try { const r = req.call(card); if (r && r.catch) r.catch(() => {}); } catch (e) {} } // overlay stays if the browser refuses
+  } else if (nativeFsEl()) {
+    const ex = document.exitFullscreen || document.webkitExitFullscreen;
+    try { const r = ex.call(document); if (r && r.catch) r.catch(() => {}); } catch (e) {}
+  }
+}
+$('fs').onclick = () => setFullScreen(!fsOn);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && fsOn) setFullScreen(false); });
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (fsOn && !nativeFsEl()) setFullScreen(false); })); // user pressed Esc in real full screen
+
 $('meta').addEventListener('click', e => {
   const b = e.target.closest('.mcopy');
   if (b) copyFrom(b.parentNode.querySelector('input'), b, 'Copy');
@@ -1247,10 +1292,20 @@ function outNames() { // unique .webp names for the current list
   });
 }
 
+async function loadBitmap(file) {
+  if (window.createImageBitmap) { try { return await createImageBitmap(file); } catch (e) { /* try the older way below */ } }
+  return new Promise((resolve, reject) => {
+    const u = URL.createObjectURL(file), im = new Image();
+    im.onload = () => { URL.revokeObjectURL(u); resolve(im); };
+    im.onerror = () => { URL.revokeObjectURL(u); reject(new Error('This image could not be read.')); };
+    im.src = u;
+  });
+}
+
 async function convertImage(file) {
   const maxW = +$('i-max').value, q = +$('i-q').value / 100;
-  const bmp = await createImageBitmap(file);
-  let w = bmp.width, h = bmp.height;
+  const bmp = await loadBitmap(file);
+  let w = bmp.naturalWidth || bmp.width, h = bmp.naturalHeight || bmp.height;
   if (maxW && w > maxW) { h = Math.round(h * maxW / w); w = maxW; } // only shrink, never enlarge
   const cv = document.createElement('canvas');
   cv.width = w; cv.height = h;
@@ -1372,6 +1427,11 @@ $('i-zip').onclick = async () => {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 };
+
+/* Safety net: an unexpected error shows a clear message instead of failing silently */
+const fatal = msg => { $('status').innerHTML = `<div class="bad">Something went wrong (${esc(String(msg).slice(0, 160))}). Refresh the page and try again. Your original document is not changed.</div>`; };
+window.addEventListener('error', e => { if (e.message) fatal(e.message); });
+window.addEventListener('unhandledrejection', e => fatal((e.reason && e.reason.message) || e.reason || 'unknown error'));
 </script>
 </body>
 </html>
